@@ -1,0 +1,46 @@
+{% extends "sirana/base.html" %}
+
+{% block content %}
+<h2>Narudžbe</h2>
+
+<form method="get" class="mb-3">
+    <input type="text" name="search" value="{{ search }}" class="form-control" placeholder="Pretraži po broju narudžbe">
+    <button type="submit" class="btn btn-primary mt-2">Pretraži</button>
+</form>
+
+<a href="{% url 'narudzba_create' %}" class="btn btn-success mb-3">Dodaj narudžbu</a>
+
+<table class="table table-bordered table-striped bg-white">
+    <thead>
+        <tr>
+            <th>Broj narudžbe</th>
+            <th>Kupac</th>
+            <th>Status</th>
+            <th>Način plaćanja</th>
+            <th>Datum</th>
+            <th>Ukupno</th>
+            <th>Akcije</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for narudzba in narudzbe %}
+        <tr>
+            <td>{{ narudzba.id }}</td>
+            <td>{{ narudzba.naziv_kupca }}</td>
+            <td>{{ narudzba.get_status_display }}</td>
+            <td>{{ narudzba.nacin_placanja }}</td>
+            <td>{{ narudzba.datum }}</td>
+            <td>{{ narudzba.ukupno }}</td>
+            <td>
+                <a href="{% url 'narudzba_detail' narudzba.id %}" class="btn btn-sm btn-warning">Otvori</a>
+                <a href="{% url 'narudzba_delete' narudzba.id %}" class="btn btn-sm btn-danger">Obriši</a>
+            </td>
+        </tr>
+        {% empty %}
+        <tr>
+            <td colspan="7">Nema narudžbi.</td>
+        </tr>
+        {% endfor %}
+    </tbody>
+</table>
+{% endblock %}

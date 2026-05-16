@@ -1,0 +1,40 @@
+{% extends "sirana/base.html" %}
+
+{% block content %}
+<h2>Načina plaćanja</h2>
+
+<form method="get" class="mb-3">
+    <input type="text" name="search" value="{{ search }}" class="form-control" placeholder="Pretraži način plaćanja">
+    <button type="submit" class="btn btn-primary mt-2">Pretraži</button>
+</form>
+
+<a href="{% url 'nacin_placanja_create' %}" class="btn btn-success mb-3">Dodaj način plaćanja</a>
+
+<table class="table table-bordered table-striped bg-white">
+    <thead>
+        <tr>
+            <th>Naziv</th>
+            <th>Opis</th>
+            <th>Aktivan</th>
+            <th>Akcije</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for nacin in nacini %}
+        <tr>
+            <td>{{ nacin.naziv }}</td>
+            <td>{{ nacin.opis }}</td>
+            <td>{{ nacin.aktivan|yesno:"Da,Ne" }}</td>
+            <td>
+                <a href="{% url 'nacin_placanja_update' nacin.id %}" class="btn btn-sm btn-warning">Uredi</a>
+                <a href="{% url 'nacin_placanja_delete' nacin.id %}" class="btn btn-sm btn-danger">Obriši</a>
+            </td>
+        </tr>
+        {% empty %}
+        <tr>
+            <td colspan="4">Nema podataka.</td>
+        </tr>
+        {% endfor %}
+    </tbody>
+</table>
+{% endblock %}

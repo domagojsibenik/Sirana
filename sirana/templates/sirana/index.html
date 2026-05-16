@@ -1,0 +1,18 @@
+ {% block content %}
+ <form action="{% url 'create-order' %}"
+      method="post"
+    >
+    {% csrf_token %}
+    <label>Title</label>
+    <input type="text" name="title"><br>
+    <input type="submit" value="Učitaj sliku">
+</form>
+
+ <div class="order-list">
+        {% for order in orders %}
+        <div class="order-card">
+            <h2 class="order-title">{{ order.title}}</h2>
+        </div>
+        {% endfor %}
+</div>
+{% endblock content %}

@@ -1,0 +1,18 @@
+{% extends "sirana/base.html" %}
+
+{% block content %}
+<div class="card">
+    <div class="card-body">
+        <h2>{{ title }}</h2>
+
+        <form method="post">
+            {% csrf_token %}
+
+            {{ form.as_p }}
+
+            <button type="submit" class="btn btn-success">Spremi</button>
+            <a href="javascript:history.back()" class="btn btn-secondary">Natrag</a>
+        </form>
+    </div>
+</div>
+{% endblock %}

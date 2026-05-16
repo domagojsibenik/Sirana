@@ -1,0 +1,223 @@
+{% extends "sirana/base.html" %}
+
+{% block content %}
+
+<div class="card master-card mb-4">
+    <div class="card-body">
+        <h2>Narudžba</h2>
+
+        <div class="alert alert-secondary">
+            <strong>Broj narudžbe:</strong> {{ narudzba.id }}
+        </div>
+
+        <form method="post">
+            {% csrf_token %}
+
+            {{ form.non_field_errors }}
+
+            <div class="row">
+                <div class="col-md-6">
+                    <label class="form-label">Kupac</label>
+                    {{ form.naziv_kupca }}
+                    {{ form.naziv_kupca.errors }}
+                </div>
+
+                <div class="col-md-6">
+                    <label class="form-label">Adresa kupca</label>
+                    {{ form.adresa_kupca }}
+                    {{ form.adresa_kupca.errors }}
+                </div>
+            </div>
+
+            <div class="row mt-3">
+                <div class="col-md-6">
+                    <label class="form-label">Email kupca</label>
+                    {{ form.email_kupca }}
+                    {{ form.email_kupca.errors }}
+                </div>
+
+                <div class="col-md-6">
+                    <label class="form-label">Telefon kupca</label>
+                    {{ form.telefon_kupca }}
+                    {{ form.telefon_kupca.errors }}
+                </div>
+            </div>
+
+            <div class="row mt-3">
+                <div class="col-md-6">
+                    <label class="form-label">OIB kupca</label>
+                    {{ form.oib_kupca }}
+                    {{ form.oib_kupca.errors }}
+                </div>
+
+                <div class="col-md-6">
+                    <label class="form-label">Način plaćanja</label>
+                    {{ form.nacin_placanja }}
+                    {{ form.nacin_placanja.errors }}
+                </div>
+            </div>
+
+            <div class="row mt-3">
+                <div class="col-md-6">
+                    <label class="form-label">Status</label>
+                    {{ form.status }}
+                    {{ form.status.errors }}
+                </div>
+
+                <div class="col-md-6">
+                    <label class="form-label">Napomena</label>
+                    {{ form.napomena }}
+                    {{ form.napomena.errors }}
+                </div>
+            </div>
+
+            <div class="mt-4">
+                <button type="submit" class="btn btn-success">
+                    Spremi narudžbu
+                </button>
+
+                <a href="{% url 'narudzba_list' %}" class="btn btn-secondary">
+                    Natrag
+                </a>
+
+                <a href="{% url 'narudzba_delete' narudzba.id %}" class="btn btn-danger">
+                    Obriši narudžbu
+                </a>
+            </div>
+        </form>
+    </div>
+</div>
+
+
+<div class="card detail-card mb-4">
+    <div class="card-body">
+        <h2>Stavke narudžbe</h2>
+
+        <form method="post" action="{% url 'stavka_create' narudzba.id %}">
+            {% csrf_token %}
+
+            <div class="row align-items-end stavka-input-row">
+                <div class="col-md-4">
+                    <label class="form-label">Sir</label>
+                    <select id="sirSelect" name="sir_id" class="form-select">
+                        <option value="">---------</option>
+                        {% for sir in sirevi %}
+                            <option value="{{ sir.id }}" data-cijena="{{ sir.cijena_po_kg }}">
+                                {{ sir.naziv }}
+                            </option>
+                        {% endfor %}
+                    </select>
+                </div>
+
+                <div class="col-md-2">
+                    <label class="form-label">Količina kg</label>
+                    <input
+                        type="number"
+                        step="0.01"
+                        min="0"
+                        name="kolicina_kg"
+                        id="kolicinaInput"
+                        class="form-control"
+                    >
+                </div>
+
+                <div class="col-md-2">
+                    <label class="form-label">Cijena po kg</label>
+                    <input
+                        type="number"
+                        step="0.01"
+                        min="0"
+                        name="cijena_po_kg"
+                        id="cijenaInput"
+                        class="form-control"
+                    >
+                </div>
+
+                <div class="col-md-2">
+                    <label class="form-label">Popust %</label>
+                    <input
+                        type="number"
+                        step="0.01"
+                        min="0"
+                        name="popust_postotak"
+                        id="popustInput"
+                        class="form-control"
+                        value="0"
+                    >
+                </div>
+
+                <div class="col-md-2">
+                    <button type="submit" class="btn btn-primary w-100">
+                        Dodaj u narudžbu
+                    </button>
+                </div>
+            </div>
+        </form>
+
+        <table class="table table-bordered table-striped mt-4">
+            <thead>
+                <tr>
+                    <th>#</th>
+                    <th>Sir</th>
+                    <th>Količina kg</th>
+                    <th>Cijena po kg</th>
+                    <th>Popust %</th>
+                    <th>Ukupno</th>
+                    <th>Akcije</th>
+                </tr>
+            </thead>
+
+            <tbody>
+                {% for stavka in stavke %}
+                <tr>
+                    <td>{{ forloop.counter }}</td>
+                    <td>{{ stavka.sir }}</td>
+                    <td>{{ stavka.kolicina_kg }}</td>
+                    <td>{{ stavka.cijena_po_kg }}</td>
+                    <td>{{ stavka.popust_postotak }}</td>
+                    <td>{{ stavka.ukupno }}</td>
+                    <td>
+                        <form method="post" action="{% url 'stavka_delete' stavka.id %}" style="display:inline;">
+                            {% csrf_token %}
+                            <button type="submit" class="btn btn-sm btn-danger">
+                                Obriši
+                            </button>
+                        </form>
+                    </td>
+                </tr>
+                {% empty %}
+                <tr>
+                    <td colspan="7">Narudžba nema stavki.</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+
+        <div class="ukupno-box">
+            Ukupno: {{ ukupno }} €
+        </div>
+    </div>
+</div>
+
+
+<script>
+    const sirSelect = document.getElementById("sirSelect");
+    const cijenaInput = document.getElementById("cijenaInput");
+    const kolicinaInput = document.getElementById("kolicinaInput");
+
+    if (sirSelect) {
+        sirSelect.addEventListener("change", function () {
+            const selectedOption = sirSelect.options[sirSelect.selectedIndex];
+            const cijena = selectedOption.getAttribute("data-cijena");
+
+            if (cijena) {
+                cijenaInput.value = cijena;
+                kolicinaInput.focus();
+            } else {
+                cijenaInput.value = "";
+            }
+        });
+    }
+</script>
+
+{% endblock %}

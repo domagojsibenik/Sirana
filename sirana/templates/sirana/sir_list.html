@@ -1,0 +1,40 @@
+{% extends "sirana/base.html" %}
+
+{% block content %}
+<h2>Sirevi</h2>
+
+<form method="get" class="mb-3">
+    <input type="text" name="search" value="{{ search }}" class="form-control" placeholder="Pretraži sir">
+    <button type="submit" class="btn btn-primary mt-2">Pretraži</button>
+</form>
+
+<a href="{% url 'sir_create' %}" class="btn btn-success mb-3">Dodaj sir</a>
+
+<table class="table table-bordered table-striped bg-white">
+    <thead>
+        <tr>
+            <th>Naziv</th>
+            <th>Cijena po kg</th>
+            <th>Količina kg</th>
+            <th>Akcije</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for sir in sirevi %}
+        <tr>
+            <td>{{ sir.naziv }}</td>
+            <td>{{ sir.cijena_po_kg }}</td>
+            <td>{{ sir.kolicina_kg }}</td>
+            <td>
+                <a href="{% url 'sir_update' sir.id %}" class="btn btn-sm btn-warning">Uredi</a>
+                <a href="{% url 'sir_delete' sir.id %}" class="btn btn-sm btn-danger">Obriši</a>
+            </td>
+        </tr>
+        {% empty %}
+        <tr>
+            <td colspan="4">Nema sireva.</td>
+        </tr>
+        {% endfor %}
+    </tbody>
+</table>
+{% endblock %}
