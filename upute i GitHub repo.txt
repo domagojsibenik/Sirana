@@ -1,0 +1,9 @@
+https://github.com/domagojsibenik/Sirana
+
+Nakon instaliranja prikladne verzije python-a (3.12), instaliraj Django putem
+
+python -m pip install Django
+
+Nakon toga:
+
+python manage.py runserver
