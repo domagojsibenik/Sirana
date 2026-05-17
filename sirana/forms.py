@@ -1,7 +1,45 @@
 from django import forms
-from .models import NacinPlacanja, Sir, Narudzba, StavkaNarudzbe
+from .models import NacinPlacanja, Sir, Narudzba, StavkaNarudzbe, Narucitelj
 from django.forms import inlineformset_factory
 
+class NaruciteljForm(forms.Form):
+    naziv = forms.CharField(
+        max_length=100,
+        widget=forms.TextInput(attrs={"class": "form-control"})
+    )
+
+    email = forms.EmailField(
+        required=False,
+        widget=forms.EmailInput(attrs={"class": "form-control"})
+    )
+
+    adresa = forms.CharField(
+        max_length=200,
+        required=False,
+        widget=forms.TextInput(attrs={"class": "form-control"})
+    )
+
+    telefon = forms.CharField(
+        max_length=30,
+        required=False,
+        widget=forms.TextInput(attrs={"class": "form-control"})
+    )
+
+    oib = forms.CharField(
+        max_length=11,
+        widget=forms.TextInput(attrs={"class": "form-control"})
+    )
+
+    def clean_oib(self):
+        oib = self.cleaned_data.get("oib")
+
+        if len(oib) != 11:
+            raise forms.ValidationError("OIB mora imati točno 11 znamenki.")
+
+        if not oib.isdigit():
+            raise forms.ValidationError("OIB smije sadržavati samo znamenke.")
+
+        return oib
 
 class NacinPlacanjaForm(forms.ModelForm):
     class Meta:
@@ -29,26 +67,16 @@ class NarudzbaForm(forms.ModelForm):
     class Meta:
         model = Narudzba
         fields = [
-            "naziv_kupca",
-            "email_kupca",
-            "adresa_kupca",
-            "telefon_kupca",
-            "oib_kupca",
             "nacin_placanja",
-            "napomena",
             "zaposlenik",
             "dostavljac",
+            "napomena",
         ]
         widgets = {
-            "naziv_kupca": forms.TextInput(attrs={"class": "form-control"}),
-            "email_kupca": forms.EmailInput(attrs={"class": "form-control"}),
-            "adresa_kupca": forms.TextInput(attrs={"class": "form-control"}),
-            "telefon_kupca": forms.TextInput(attrs={"class": "form-control"}),
-            "oib_kupca": forms.TextInput(attrs={"class": "form-control"}),
             "nacin_placanja": forms.Select(attrs={"class": "form-select"}),
-            "napomena": forms.Textarea(attrs={"class": "form-control", "rows": 3}),
             "zaposlenik": forms.Select(attrs={"class": "form-select"}),
             "dostavljac": forms.Select(attrs={"class": "form-select"}),
+            "napomena": forms.Textarea(attrs={"class": "form-control", "rows": 3}),
         }
 
 

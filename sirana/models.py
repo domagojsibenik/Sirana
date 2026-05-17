@@ -10,7 +10,16 @@ class NacinPlacanja(models.Model):
     def __str__(self):
         return self.naziv
 
+class Narucitelj(models.Model):
+    naziv = models.CharField(max_length=100)
+    email = models.EmailField(blank=True)
+    adresa = models.CharField(max_length=200, blank=True)
+    telefon = models.CharField(max_length=30, blank=True)
+    oib = models.CharField(max_length=11, unique=True)
 
+    def __str__(self):
+        return self.naziv
+    
 class Sir(models.Model):
     naziv = models.CharField(max_length=100)
     cijena_po_kg = models.DecimalField(max_digits=10, decimal_places=2)
@@ -47,12 +56,8 @@ class Narudzba(models.Model):
     status = models.CharField(max_length=20, choices=StatusNarudzbe.choices,default=StatusNarudzbe.ZAPRIMLJENA)
     napomena = models.TextField(blank=True)
 
-    naziv_kupca = models.CharField(max_length=100)
-    email_kupca = models.EmailField(blank=True)
-    adresa_kupca = models.CharField(max_length=200, blank=True)
-    telefon_kupca = models.CharField(max_length=30, blank=True)
-    oib_kupca = models.CharField(max_length=11, blank=True)
-
+    
+    narucitelj = models.ForeignKey(Narucitelj, on_delete=models.PROTECT)
     
 
     nacin_placanja = models.ForeignKey(NacinPlacanja, on_delete=models.PROTECT)
@@ -92,9 +97,5 @@ class StavkaNarudzbe(models.Model):
         return f"{self.sir.naziv} - {self.kolicina_kg} kg"
     
 
-class Narucitelj(models.Model):
-    naziv = models.CharField(max_length=100)
-    adresa = models.CharField(max_length=200, blank=True)
-    telefon_kupca = models.CharField(max_length=30, blank=True)
 
 

@@ -4,8 +4,9 @@ from .models import (
     Sir,
     Narudzba,
     StavkaNarudzbe,
+    Narucitelj,
     Zaposlenik,
-    Dostavljac
+    Dostavljac,
 )
 
 
@@ -16,13 +17,14 @@ class StavkaNarudzbeInline(admin.TabularInline):
 
 @admin.register(Narudzba)
 class NarudzbaAdmin(admin.ModelAdmin):
-    list_display = ["id", "naziv_kupca", "status", "nacin_placanja", "vrKreiranja"]
-    search_fields = ["id", "naziv_kupca"]
+    list_display = ["id", "narucitelj", "status", "nacin_placanja", "vrKreiranja"]
+    search_fields = ["narucitelj__naziv", "narucitelj__oib"]
     list_filter = ["status", "nacin_placanja"]
     inlines = [StavkaNarudzbeInline]
 
 
 admin.site.register(NacinPlacanja)
 admin.site.register(Sir)
+admin.site.register(Narucitelj)
 admin.site.register(Zaposlenik)
 admin.site.register(Dostavljac)

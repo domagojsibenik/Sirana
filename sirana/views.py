@@ -1,13 +1,14 @@
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib import messages
 from decimal import Decimal
-from .models import NacinPlacanja, Sir, Narudzba, StavkaNarudzbe
+from .models import NacinPlacanja, Sir, Narudzba, StavkaNarudzbe, Narucitelj
 from .forms import (
     NacinPlacanjaForm,
     SirForm,
     NarudzbaForm,
     StavkaNarudzbeForm,
     StavkaNarudzbeFormSet,
+    NaruciteljForm
 )
 from django.core.exceptions import ValidationError
 from .services import NarudzbaService
@@ -162,16 +163,31 @@ def narudzba_list(request):
 
 
 def narudzba_create(request):
-    sirevi = Sir.objects.all()
+    sirevi = Sir.objects.filter(zaProdaju=True)
 
     if request.method == "POST":
-        form = NarudzbaForm(request.POST)
+        narudzba_form = NarudzbaForm(request.POST)
+        narucitelj_form = NaruciteljForm(request.POST)
 
-        if form.is_valid():
-            narudzba = form.save(commit = False)
+        if narudzba_form.is_valid() and narucitelj_form.is_valid():
+            narucitelj_podaci = narucitelj_form.cleaned_data
+
+            narucitelj, created = Narucitelj.objects.get_or_create(
+                oib=narucitelj_podaci["oib"],
+                defaults={
+                    "naziv": narucitelj_podaci["naziv"],
+                    "email": narucitelj_podaci["email"],
+                    "adresa": narucitelj_podaci["adresa"],
+                    "telefon": narucitelj_podaci["telefon"],
+                }
+            )
+
+            narudzba = narudzba_form.save(commit=False)
+            narudzba.narucitelj = narucitelj
 
             try:
                 NarudzbaService.provjeri_aktivnost_placanja(narudzba)
+
                 narudzba.save()
 
                 sir_ids = request.POST.getlist("sir_id[]")
@@ -179,9 +195,14 @@ def narudzba_create(request):
                 cijene = request.POST.getlist("cijena_po_kg[]")
                 popusti = request.POST.getlist("popust_postotak[]")
 
-                for sir_id, kolicina, cijena, popust in zip(sir_ids, kolicine, cijene, popusti):
+                for sir_id, kolicina, cijena, popust in zip(
+                    sir_ids,
+                    kolicine,
+                    cijene,
+                    popusti
+                ):
                     if sir_id and kolicina and cijena:
-                        sir = Sir.objects.get(id=sir_id)
+                        sir = get_object_or_404(Sir, pk=sir_id)
 
                         StavkaNarudzbe.objects.create(
                             narudzba=narudzba,
@@ -193,22 +214,29 @@ def narudzba_create(request):
 
                 messages.success(request, "Narudžba je uspješno kreirana.")
                 return redirect("narudzba_detail", pk=narudzba.pk)
-            
+
             except ValidationError as e:
-                form.add_error(None, e.message)
+                narudzba_form.add_error(None, e.message)
 
     else:
-        form = NarudzbaForm()
+        narudzba_form = NarudzbaForm()
+        narucitelj_form = NaruciteljForm()
 
     return render(request, "sirana/narudzba_create.html", {
-        "form": form,
+        "form": narudzba_form,
+        "narucitelj_form": narucitelj_form,
         "sirevi": sirevi,
         "title": "Dodaj narudžbu",
     })
 
 def narudzba_detail(request, pk):
     narudzba = get_object_or_404(
-        Narudzba.objects.select_related("nacin_placanja"),
+        Narudzba.objects.select_related(
+            "narucitelj",
+            "nacin_placanja",
+            "zaposlenik",
+            "dostavljac",
+        ),
         pk=pk
     )
 
@@ -219,17 +247,23 @@ def narudzba_detail(request, pk):
             NarudzbaService.provjeri_mogucnost_uredivanja(narudzba)
 
             if form.is_valid():
-                form.save()
+                nova_narudzba = form.save(commit=False)
+
+                NarudzbaService.provjeri_mogucnost_uredivanja(nova_narudzba)
+
+                nova_narudzba.save()
+
                 messages.success(request, "Narudžba je spremljena.")
                 return redirect("narudzba_detail", pk=narudzba.pk)
-        
+
         except ValidationError as e:
             form.add_error(None, e.message)
+
     else:
         form = NarudzbaForm(instance=narudzba)
 
     stavke = narudzba.stavke.select_related("sir").all()
-    sirevi = Sir.objects.all()
+    sirevi = Sir.objects.filter(zaProdaju=True)
 
     return render(request, "sirana/narudzba_detail.html", {
         "narudzba": narudzba,
@@ -237,6 +271,7 @@ def narudzba_detail(request, pk):
         "stavke": stavke,
         "sirevi": sirevi,
         "ukupno": narudzba.ukupno(),
+       
     })
 
 
@@ -257,28 +292,33 @@ def stavka_create(request, narudzba_id):
     narudzba = get_object_or_404(Narudzba, pk=narudzba_id)
 
     if request.method == "POST":
-        sir_id = request.POST.get("sir_id")
-        kolicina_kg = request.POST.get("kolicina_kg")
-        cijena_po_kg = request.POST.get("cijena_po_kg")
-        popust_postotak = request.POST.get("popust_postotak") or "0"
+        try:
+            NarudzbaService.provjeri_mogucnost_uredivanja(narudzba)
 
-        if sir_id and kolicina_kg and cijena_po_kg:
-            sir = get_object_or_404(Sir, pk=sir_id)
+            sir_id = request.POST.get("sir_id")
+            kolicina_kg = request.POST.get("kolicina_kg")
+            cijena_po_kg = request.POST.get("cijena_po_kg")
+            popust_postotak = request.POST.get("popust_postotak") or "0"
 
-            StavkaNarudzbe.objects.create(
-                narudzba=narudzba,
-                sir=sir,
-                kolicina_kg=Decimal(kolicina_kg),
-                cijena_po_kg=Decimal(cijena_po_kg),
-                popust_postotak=Decimal(popust_postotak),
-            )
+            if sir_id and kolicina_kg and cijena_po_kg:
+                sir = get_object_or_404(Sir, pk=sir_id)
 
-            messages.success(request, "Stavka je dodana u narudžbu.")
-        else:
-            messages.error(request, "Odaberi sir, količinu i cijenu.")
+                StavkaNarudzbe.objects.create(
+                    narudzba=narudzba,
+                    sir=sir,
+                    kolicina_kg=Decimal(kolicina_kg),
+                    cijena_po_kg=Decimal(cijena_po_kg),
+                    popust_postotak=Decimal(popust_postotak),
+                )
+
+                messages.success(request, "Stavka je dodana u narudžbu.")
+            else:
+                messages.error(request, "Odaberi sir, količinu i cijenu.")
+
+        except ValidationError as e:
+            messages.error(request, e.message)
 
     return redirect("narudzba_detail", pk=narudzba.pk)
-
 
 
 def stavka_update(request, pk):
@@ -313,10 +353,13 @@ def stavka_delete(request, pk):
     narudzba_id = stavka.narudzba.pk
 
     if request.method == "POST":
-        stavka.delete()
-        messages.success(request, "Stavka narudžbe je obrisana.")
-        return redirect("narudzba_detail", pk=narudzba_id)
+        try:
+            NarudzbaService.provjeri_mogucnost_uredivanja(stavka.narudzba)
 
-    return render(request, "sirana/confirm_delete.html", {
-        "object": stavka,
-    })
+            stavka.delete()
+            messages.success(request, "Stavka narudžbe je obrisana.")
+
+        except ValidationError as e:
+            messages.error(request, e.message)
+
+    return redirect("narudzba_detail", pk=narudzba_id)
