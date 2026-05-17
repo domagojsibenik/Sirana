@@ -242,18 +242,39 @@ def narudzba_detail(request, pk):
 
     if request.method == "POST":
         form = NarudzbaForm(request.POST, instance=narudzba)
+        narucitelj_form = NaruciteljForm(request.POST)
 
         try:
             NarudzbaService.provjeri_mogucnost_uredivanja(narudzba)
 
-            if form.is_valid():
-                nova_narudzba = form.save(commit=False)
+            if form.is_valid() and narucitelj_form.is_valid():
+                podaci = narucitelj_form.cleaned_data
 
-                NarudzbaService.provjeri_mogucnost_uredivanja(nova_narudzba)
+                narucitelj, created = Narucitelj.objects.get_or_create(
+                    oib=podaci["oib"],
+                    defaults={
+                        "naziv": podaci["naziv"],
+                        "email": podaci["email"],
+                        "adresa": podaci["adresa"],
+                        "telefon": podaci["telefon"],
+                    }
+                )
+
+                if not created:
+                    narucitelj.naziv = podaci["naziv"]
+                    narucitelj.email = podaci["email"]
+                    narucitelj.adresa = podaci["adresa"]
+                    narucitelj.telefon = podaci["telefon"]
+                    narucitelj.save()
+
+                nova_narudzba = form.save(commit=False)
+                nova_narudzba.narucitelj = narucitelj
+
+                NarudzbaService.provjeri_aktivnost_placanja(nova_narudzba)
 
                 nova_narudzba.save()
 
-                messages.success(request, "Narudžba je spremljena.")
+                messages.success(request, "Narudžba i naručitelj su spremljeni.")
                 return redirect("narudzba_detail", pk=narudzba.pk)
 
         except ValidationError as e:
@@ -261,6 +282,13 @@ def narudzba_detail(request, pk):
 
     else:
         form = NarudzbaForm(instance=narudzba)
+        narucitelj_form = NaruciteljForm(initial={
+            "naziv": narudzba.narucitelj.naziv,
+            "email": narudzba.narucitelj.email,
+            "adresa": narudzba.narucitelj.adresa,
+            "telefon": narudzba.narucitelj.telefon,
+            "oib": narudzba.narucitelj.oib,
+        })
 
     stavke = narudzba.stavke.select_related("sir").all()
     sirevi = Sir.objects.filter(zaProdaju=True)
@@ -268,10 +296,11 @@ def narudzba_detail(request, pk):
     return render(request, "sirana/narudzba_detail.html", {
         "narudzba": narudzba,
         "form": form,
+        "narucitelj_form": narucitelj_form,
         "stavke": stavke,
         "sirevi": sirevi,
         "ukupno": narudzba.ukupno(),
-       
+      
     })
 
 
