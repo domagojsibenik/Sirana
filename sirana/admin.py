@@ -6,7 +6,6 @@ from .models import (
     StavkaNarudzbe,
     Narucitelj,
     Zaposlenik,
-    Dostavljac,
 )
 
 
@@ -27,4 +26,3 @@ admin.site.register(NacinPlacanja)
 admin.site.register(Sir)
 admin.site.register(Narucitelj)
 admin.site.register(Zaposlenik)
-admin.site.register(Dostavljac)

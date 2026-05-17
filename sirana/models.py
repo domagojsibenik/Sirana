@@ -29,20 +29,17 @@ class Sir(models.Model):
     def __str__(self):
         return self.naziv
 
+class StatusRada(models.TextChoices):
+    ZAPOSLEN = "zaposlen", "Zaposlen"
+    NEZAPOSLEN = "nezaposlen", "Nezaposlen"
+
 class Zaposlenik(models.Model):
     puno_ime = models.CharField(max_length=100)
     datumZaposlenja = models.DateTimeField(auto_now_add=True)
-    statusRada = models.CharField(max_length=100)
+    statusRada = models.CharField(max_length=100, choices=StatusRada.choices, default=StatusRada.ZAPOSLEN)
 
     def __str__(self):
         return self.puno_ime
-
-class Dostavljac(models.Model):
-    naziv = models.CharField(max_length=100)
-    opis = models.TextField(blank=True)
-
-    def __str__(self):
-        return self.naziv
 
 class StatusNarudzbe(models.TextChoices):
     ZAPRIMLJENA = "zaprimljena", "Zaprimljena"
@@ -68,8 +65,13 @@ class Narudzba(models.Model):
         on_delete=models.PROTECT
     )
     
-    dostavljac = models.ForeignKey(Dostavljac, on_delete=models.PROTECT)
-    
+    dostavljac = models.ForeignKey(
+        Zaposlenik,
+        related_name="dostave",
+        on_delete=models.PROTECT,
+        blank=True,
+        null=True
+    )
 
     def ukupno(self):
         return sum(stavka.ukupno() for stavka in self.stavke.all())
@@ -85,11 +87,10 @@ class StavkaNarudzbe(models.Model):
 
     sir = models.ForeignKey(Sir, on_delete=models.PROTECT)
     kolicina_kg = models.DecimalField(max_digits=10, decimal_places=2)
-    cijena_po_kg = models.DecimalField(max_digits=10, decimal_places=2)
     popust_postotak = models.DecimalField(max_digits=5, decimal_places=2, default=0)
 
     def ukupno(self):
-        osnovica = self.kolicina_kg * self.sir.kolicina_kg * self.sir.cijena_po_kg
+        osnovica = self.kolicina_kg * self.sir.cijena_po_kg
         popust = osnovica * self.popust_postotak / Decimal("100")
         return osnovica - popust
 

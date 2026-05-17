@@ -83,11 +83,10 @@ class NarudzbaForm(forms.ModelForm):
 class StavkaNarudzbeForm(forms.ModelForm):
     class Meta:
         model = StavkaNarudzbe
-        fields = ["sir", "kolicina_kg", "cijena_po_kg", "popust_postotak"]
+        fields = ["sir", "kolicina_kg", "popust_postotak"]
         widgets = {
             "sir": forms.Select(attrs={"class": "form-select"}),
             "kolicina_kg": forms.NumberInput(attrs={"class": "form-control"}),
-            "cijena_po_kg": forms.NumberInput(attrs={"class": "form-control"}),
             "popust_postotak": forms.NumberInput(attrs={"class": "form-control"}),
         }
 

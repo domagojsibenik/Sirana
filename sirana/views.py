@@ -192,23 +192,20 @@ def narudzba_create(request):
 
                 sir_ids = request.POST.getlist("sir_id[]")
                 kolicine = request.POST.getlist("kolicina_kg[]")
-                cijene = request.POST.getlist("cijena_po_kg[]")
                 popusti = request.POST.getlist("popust_postotak[]")
 
-                for sir_id, kolicina, cijena, popust in zip(
+                for sir_id, kolicina, popust in zip(
                     sir_ids,
                     kolicine,
-                    cijene,
                     popusti
                 ):
-                    if sir_id and kolicina and cijena:
+                    if sir_id and kolicina:
                         sir = get_object_or_404(Sir, pk=sir_id)
 
                         StavkaNarudzbe.objects.create(
                             narudzba=narudzba,
                             sir=sir,
                             kolicina_kg=Decimal(kolicina),
-                            cijena_po_kg=Decimal(cijena),
                             popust_postotak=Decimal(popust or "0"),
                         )
 
@@ -326,17 +323,15 @@ def stavka_create(request, narudzba_id):
 
             sir_id = request.POST.get("sir_id")
             kolicina_kg = request.POST.get("kolicina_kg")
-            cijena_po_kg = request.POST.get("cijena_po_kg")
             popust_postotak = request.POST.get("popust_postotak") or "0"
 
-            if sir_id and kolicina_kg and cijena_po_kg:
+            if sir_id and kolicina_kg:
                 sir = get_object_or_404(Sir, pk=sir_id)
 
                 StavkaNarudzbe.objects.create(
                     narudzba=narudzba,
                     sir=sir,
                     kolicina_kg=Decimal(kolicina_kg),
-                    cijena_po_kg=Decimal(cijena_po_kg),
                     popust_postotak=Decimal(popust_postotak),
                 )
 
