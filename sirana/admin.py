@@ -4,6 +4,8 @@ from .models import (
     Sir,
     Narudzba,
     StavkaNarudzbe,
+    Zaposlenik,
+    Dostavljac
 )
 
 
@@ -14,7 +16,7 @@ class StavkaNarudzbeInline(admin.TabularInline):
 
 @admin.register(Narudzba)
 class NarudzbaAdmin(admin.ModelAdmin):
-    list_display = ["id", "naziv_kupca", "status", "nacin_placanja", "datum"]
+    list_display = ["id", "naziv_kupca", "status", "nacin_placanja", "vrKreiranja"]
     search_fields = ["id", "naziv_kupca"]
     list_filter = ["status", "nacin_placanja"]
     inlines = [StavkaNarudzbeInline]
@@ -22,3 +24,5 @@ class NarudzbaAdmin(admin.ModelAdmin):
 
 admin.site.register(NacinPlacanja)
 admin.site.register(Sir)
+admin.site.register(Zaposlenik)
+admin.site.register(Dostavljac)

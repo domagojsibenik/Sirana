@@ -29,7 +29,7 @@
             <td>{{ narudzba.naziv_kupca }}</td>
             <td>{{ narudzba.get_status_display }}</td>
             <td>{{ narudzba.nacin_placanja }}</td>
-            <td>{{ narudzba.datum }}</td>
+            <td>{{ narudzba.vrKreiranja }}</td>
             <td>{{ narudzba.ukupno }}</td>
             <td>
                 <a href="{% url 'narudzba_detail' narudzba.id %}" class="btn btn-sm btn-warning">Otvori</a>

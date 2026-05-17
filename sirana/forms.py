@@ -36,6 +36,8 @@ class NarudzbaForm(forms.ModelForm):
             "oib_kupca",
             "nacin_placanja",
             "napomena",
+            "zaposlenik",
+            "dostavljac",
         ]
         widgets = {
             "naziv_kupca": forms.TextInput(attrs={"class": "form-control"}),
@@ -45,6 +47,8 @@ class NarudzbaForm(forms.ModelForm):
             "oib_kupca": forms.TextInput(attrs={"class": "form-control"}),
             "nacin_placanja": forms.Select(attrs={"class": "form-select"}),
             "napomena": forms.Textarea(attrs={"class": "form-control", "rows": 3}),
+            "zaposlenik": forms.Select(attrs={"class": "form-select"}),
+            "dostavljac": forms.Select(attrs={"class": "form-select"}),
         }
 
 

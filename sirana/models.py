@@ -15,10 +15,25 @@ class Sir(models.Model):
     naziv = models.CharField(max_length=100)
     cijena_po_kg = models.DecimalField(max_digits=10, decimal_places=2)
     kolicina_kg = models.DecimalField(max_digits=10, decimal_places=2, default=0)
+    zaProdaju = models.BooleanField(default=True)
 
     def __str__(self):
         return self.naziv
 
+class Zaposlenik(models.Model):
+    puno_ime = models.CharField(max_length=100)
+    datumZaposlenja = models.DateTimeField(auto_now_add=True)
+    statusRada = models.CharField(max_length=100)
+
+    def __str__(self):
+        return self.puno_ime
+
+class Dostavljac(models.Model):
+    naziv = models.CharField(max_length=100)
+    opis = models.TextField(blank=True)
+
+    def __str__(self):
+        return self.naziv
 
 class StatusNarudzbe(models.TextChoices):
     ZAPRIMLJENA = "zaprimljena", "Zaprimljena"
@@ -28,25 +43,28 @@ class StatusNarudzbe(models.TextChoices):
 
 
 class Narudzba(models.Model):
+    vrKreiranja = models.DateTimeField(auto_now_add=True)
+    status = models.CharField(max_length=20, choices=StatusNarudzbe.choices,default=StatusNarudzbe.ZAPRIMLJENA)
+    napomena = models.TextField(blank=True)
+
     naziv_kupca = models.CharField(max_length=100)
     email_kupca = models.EmailField(blank=True)
     adresa_kupca = models.CharField(max_length=200, blank=True)
     telefon_kupca = models.CharField(max_length=30, blank=True)
     oib_kupca = models.CharField(max_length=11, blank=True)
 
-    status = models.CharField(
-        max_length=20,
-        choices=StatusNarudzbe.choices,
-        default=StatusNarudzbe.ZAPRIMLJENA
-    )
+    
 
-    nacin_placanja = models.ForeignKey(
-        NacinPlacanja,
+    nacin_placanja = models.ForeignKey(NacinPlacanja, on_delete=models.PROTECT)
+
+    zaposlenik = models.ForeignKey(
+        Zaposlenik,
+        related_name="narudzbe",
         on_delete=models.PROTECT
     )
-
-    datum = models.DateTimeField(auto_now_add=True)
-    napomena = models.TextField(blank=True)
+    
+    dostavljac = models.ForeignKey(Dostavljac, on_delete=models.PROTECT)
+    
 
     def ukupno(self):
         return sum(stavka.ukupno() for stavka in self.stavke.all())
@@ -72,3 +90,11 @@ class StavkaNarudzbe(models.Model):
 
     def __str__(self):
         return f"{self.sir.naziv} - {self.kolicina_kg} kg"
+    
+
+class Narucitelj(models.Model):
+    naziv = models.CharField(max_length=100)
+    adresa = models.CharField(max_length=200, blank=True)
+    telefon_kupca = models.CharField(max_length=30, blank=True)
+
+
